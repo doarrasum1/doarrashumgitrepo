@@ -1,0 +1,26 @@
+{
+    "cordova-plugin-dialogs": {
+        "source": {
+            "type": "registry",
+            "id": "cordova-plugin-dialogs"
+        },
+        "is_top_level": true,
+        "variables": {}
+    },
+    "org.cloudsky.cordovaplugins.zbar": {
+        "source": {
+            "type": "local",
+            "path": "C:\\Users\\shaik\\Documents\\Mobile\\doar\\zbar\\org.cloudsky.cordovaplugins.zbar"
+        },
+        "is_top_level": true,
+        "variables": {}
+    },
+    "cordova-plugin-whitelist": {
+        "source": {
+            "type": "registry",
+            "id": "cordova-plugin-whitelist@1"
+        },
+        "is_top_level": true,
+        "variables": {}
+    }
+}

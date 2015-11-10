@@ -1,0 +1,244 @@
+﻿<!doctype html>
+<html class="">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport"
+          content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+    <title>דואר ישראל</title>
+    <link href="css/boilerplate.css" rel="stylesheet" type="text/css">
+    <link href="css/style.css" rel="stylesheet" type="text/css">
+    <link href='http://fonts.googleapis.com/css?family=Arimo:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="js/css/jquery.sidr.dark.css">
+    <script src="js/jquery-2.1.3.js"></script>
+    <script src="js/jquery.sidr.min.js"></script>
+    <script>
+        $(function () {
+            $("#header").load("header.html");
+            $("#footer").load("footer.html");
+        });
+    </script>
+</head>
+<body class="home">
+    <div id="header"></div>
+    <!--Content-->
+    <script>
+        $(document).ready(function () {
+            $(".mainContent").css("height", window.innerHeight - ($("#header").innerHeight() + 160));
+        });
+    </script>
+    <div class="mainContent">
+        <div class="merukezetTitle">מסירה מרוכזת</div>
+        <div class="BarcodeFields">
+            <form id="no_deliver">
+                <select class="area" name="area" id="reportReasonsList"></select>
+                <div class="packageinputWrapper">
+                    <span class="packageinputButton"></span>
+                    <input type="text" class="packageinput" name="packageNum" maxlength="14" size="14"
+                           placeholder="הקלד מספר דבר דואר"><br>
+                </div>
+                <div class="greyText">* במידה והברקוד אינו קריא ניתן להקליד מספר דבר הדואר</div>
+            </form>
+            <br>
+        </div>
+        <a href="#">
+            <div class="BarcodeArea" id="deliver_startScan"></div>
+        </a><br>
+        <div class="totalScanItems">
+            <div class="totalScanItemsText">פריטים שנסרקו עד כה</div>
+            <div class="totalScanItemsIcon"><span id="counter">0</span></div>
+            <div class="totalScanItemsedit"><a href="#">ערוך</a></div>
+        </div>
+        <div class="loginBtn" id="submit"><a href="#">עדכן</a></div>
+    </div>
+    <!--Footer-->
+    <div id="footer"></div>
+</body>
+</html>
+
+
+<script type="text/javascript">
+    console.log('in mesira merukezet');                                                            //clear local storge
+    var barcodes = JSON.parse(localStorage.getItem("barcodes")) || [];
+    var counter = parseInt(localStorage.getItem("barcodeCounter")) || 0;
+    $('#counter').text(localStorage.getItem("barcodeCounter") || 0);
+    console.log(localStorage);
+    $('#deliver_startScan').click(function () {
+               var params = 
+                {
+                    text_title: "סריקת ברקוד", // Android only
+                    text_instructions: "כוון את המצלמה על הברקוד.", // Android only
+                    camera: "back", // defaults to "back"
+                    flash: "auto", // defaults to "auto". See Quirks
+                    drawSight: true //defaults to true, create a red sight/line in the center of the scanner view.
+                };
+               cloudSky.zBar.scan(params, onSuccess, onFailure);    
+}
+);
+        function onSuccess(s) {            
+            validateBarcodeS(s);                        
+        }
+        
+        function onFailure(s) {
+            console.log(s);            
+            if (s!="cancelled") {
+              var errorAlert='סליחה, המצלמה נתקלה בבעיה. ייתכן שיהיה עליך להפעיל מחדש את המכשיר';
+              displayErrorMessage(errorAlert);   
+            }             
+}     
+    // function to check and add new barcode to array - for manual typing
+    $('.packageinputButton').click(function () {
+        //if ((validateManaualCode($('.packageinput').val())) && checkIfNotAvalable($('.packageinput').val())) {
+        if ((validateBarcodeM($('.packageinput').val())) && checkIfNotAvalable($('.packageinput').val())) {    
+            barcodes.push($('.packageinput').val());
+            counter += 1;
+            $('#counter').text(counter);
+            $('.packageinput').val("");
+            updateStorage();
+            console.log(localStorage);
+        }
+    })
+
+    // function submit the barcods and link to details page
+    $('#submit').click(function () {
+        var validated=true;
+        if ($('#reportReasonsList').val() == 0) {validated=false; displayErrorMessage('עליך לבחור סיבת מסירה'); }
+        if (validated==true && barcodes.length != 0) {
+            localStorage.setItem("mesira", $("#reportReasonsList").val());
+            localStorage.removeItem('reportReasonsListVal');
+            updateStorage();
+            window.location = 'deliver_details_merukezet.html';
+        } else {
+            displayErrorMessage('עליך לסרוק ברקוד או להקליד ידנית');           
+        }
+    })
+
+    // function for edit current barcods array
+    $('.totalScanItemsedit').click(function () {
+        if (($('.packageinput').val() != '') && checkIfNotAvalable($('.packageinput').val())) {
+            barcodes.push($('.packageinput').val());
+            counter += 1;
+        }
+        $('.packageinput').text('');
+        localStorage.setItem('reportReasonsListVal', $('#reportReasonsList').val());       
+        updateStorage();
+        window.location = 'erase_item.html';
+    }
+    )
+
+    // function to update the local storage
+    function updateStorage() {
+        localStorage.setItem("barcodeCounter", counter);
+        localStorage.setItem("barcodes", JSON.stringify(barcodes));
+    }
+
+    // check if the code in input is not included in barcodes array
+    function checkIfNotAvalable(item) {
+        var flag = true;
+        $(barcodes).each(function (index) { if (barcodes[index] == item) flag = false; })
+        return flag;
+    }
+    //validate typed barcode
+    function validateBarcodeM(bCode) {
+        var validated=true;
+        if (bCode.length != 13) {
+            if (bCode.length == 14) {
+                if (bCode.substring(11,13) == '80') {                    
+                    $('.packageinput').attr('value',bCode.substring(0,13));
+                } else {validated=false; errorAlert="הברקוד אינו חוקי";}
+            } else {validated=false; errorAlert="הברקוד אינו חוקי";}
+        }        
+        if (validated == false) {displayErrorMessage(errorAlert);}
+        return validated;
+    }
+
+    //validate scanned barcodes
+    function validateBarcodeS(bCode){
+        var validated=true;        
+        if (bCode.length != 13) {
+           if (bCode.length == 14) {
+              if (bCode.substring(11,13) == '80') { 
+                  bCode= bCode.substring(0,13);
+              } else {validated=false; displayErrorMessage('הברקוד שנסרק אינו חוקי'); }
+           } else {validated=false; displayErrorMessage('הברקוד שנסרק אינו חוקי'); }
+        }
+        if (validated==true) {
+            barcodes.push(bCode);
+            counter++;
+            $("#counter").html(counter);
+            localStorage.setItem("barcodes", JSON.stringify(barcodes));
+        }
+    }
+    //validate barcode that was typed by the user
+    function validateManaualCode(manualcode) {
+        //must have exactly 13 chars
+        //first 2 chars must be alphanumeric
+        //next 9 chars must be numeric
+        //last 2 chars must be letters
+        var errorManualCode1 = 'מספר התווים בברקוד חייב להיות בדיוק 13';
+        var errorManualCode2 = '2 התווים הראשונים חייבים להיות אלפא-נומריים';
+        var errorManualCode3 = '9 התווים האמצעיים חייבים להיות נומריים';
+        var errorManualCode4 = '2 התווים האחרונים חייבים להיות אותיות';
+        var errorMessageToDisplay = '';
+        var barcodeExpectedLength = 13;
+        var validated = true;
+        if (manualcode.length != barcodeExpectedLength) {
+            errorMessageToDisplay = errorManualCode1;
+            validated = false;
+        }
+        //if (validated == true && (/[^a-zA-Z0-9]/.test(manualcode.substring(0, 2)))) {
+        //    errorMessageToDisplay = errorManualCode2;
+        //    validated = false;
+        //}
+        if (validated == true && isNaN(manualcode.substring(2, 11))) {
+            errorMessageToDisplay = errorManualCode3;
+            validated = false;
+        }
+        if (validated == true && !isNaN(manualcode.substring(0, 2))) {
+            errorMessageToDisplay = errorManualCode4;
+            validated = false;
+        }
+        if (validated == false) {
+            console.log('manual barcode error: ' + errorMessageToDisplay);
+            displayErrorMessage(errorMessageToDisplay);
+        }
+        return validated;
+    }
+
+    function displayErrorMessage(errorMsg) {
+        navigator.notification.alert(
+                              errorMsg,				          //message
+                              null,											//callback
+                              'דואר רשום',							//title
+                              'אישור'										//button name
+                          );
+    }
+
+
+    //populate deliver reason select box
+    $(document).ready(function () {
+
+        $(document).on('focus', 'input, textarea', function () {
+            $(".footer").hide();
+        });
+
+        $(document).on('blur', 'input, textarea', function () {
+            $(".footer").attr("display", "block!important");
+            $(".footer").show();
+        });
+
+        $.getJSON("json/mesira.json", function (data) {
+            var listItems = '<option value="0">-בחר-</option>';
+            for (var i = 0; i < data.length; i++) {
+                listItems += "<option value='" + data[i].code + "'>" + data[i].description + "</option>";
+            }
+            $("#reportReasonsList").html(listItems);
+            $('#reportReasonsList').val(localStorage.getItem('reportReasonsListVal') || 0);
+            console.log("Report Reasons List populated");
+        }).fail(function (err) {
+            console.log("Error JSON = " + JSON.parse(err));
+        });
+
+    });
+
+</script>
+<script type="text/javascript" src="cordova.js"></script>

@@ -1,0 +1,59 @@
+﻿<!doctype html>
+<html class="">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+<title>דואר ישראל</title>
+<link href="css/boilerplate.css" rel="stylesheet" type="text/css">
+<link href="css/style.css" rel="stylesheet" type="text/css">
+<link href='http://fonts.googleapis.com/css?family=Arimo:400,700' rel='stylesheet' type='text/css'>
+ <link rel="stylesheet" href="js/css/jquery.sidr.dark.css">
+<script src="js/jquery-2.1.3.js"></script>
+ <script src="js/jquery.sidr.min.js"></script>
+ <script src="js/invoke_backend_service.js"></script>
+ <script src="js/spin.js"></script>
+  <script>
+$(function(){
+  $("#header").load("header.html");
+  $("#footer").load("footer.html");
+});
+</script>
+</head>
+<body class="home">
+<div id="header"></div>
+<!--Content-->
+<script>
+		$(document).ready(function(){
+			$(".mainContent").css("height", window.innerHeight-($("#header").innerHeight()+160));
+		});
+		</script>
+<div class="mainContent">
+<div class="reportList">
+    	<div class="reportListFirstItem"><span><strong id="NimseruLachaluka"></strong></span >נמסרו לחלוקה היום</div>
+        <h2 id="huchzeruLaMR" >שהוחזרו למ"ר</h2>
+        <ul>
+         <li><span id="ddg"></span>דד"ג</li>
+         <li><span id="merchazChaluka"></span>מרכז חלוקה</li>
+		  <!-- -->
+         <li><span id="lehachzaraLasholeach"></span>להחזרה לשולח</li>
+         <li><span  id="acher"></span>אחר</li>
+        </ul><br>
+          <ul>
+         <li><span id="hutzuLachaluka"></span>הוצאו לחלוקה</li>
+         <li><span id="nimseruLaniman"></span>נמסרו לנמען</li> 
+         <li><span id="hachzaraLasholeach"></span>הוחזרו לשולח</li> 
+         <li><span id="hodaa"></span>הודעה</li>
+		 <!-- -->
+         <li><span id="huavarLashaliach"></span>הועבר לשליח</li>
+         <li><span id="avud"></span>אבוד</li>
+         <li><span id="leloDivuach"></span>ללא דיווח</li>
+         <li><span id="teumMesira"></span>תיאום מסירה</li>
+        </ul>
+    </div>
+
+			
+
+</div>
+<!--Footer-->
+<div id="footer"></div>
+<script src="js/doch.js"></script>
