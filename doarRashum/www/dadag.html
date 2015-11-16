@@ -1,0 +1,290 @@
+﻿<!doctype html>
+<html class="">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+    <title>דואר ישראל</title>
+    <link href="css/boilerplate.css" rel="stylesheet" type="text/css">
+    <link href="css/style.css" rel="stylesheet" type="text/css">
+    <link href='http://fonts.googleapis.com/css?family=Arimo:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="js/css/jquery.sidr.dark.css">
+    <script src="js/jquery-2.1.3.js"></script>
+    <script src="js/jquery.autocomplete.js"></script>
+    <script src="js/jquery.sidr.min.js"></script>
+    <script src="js/invoke_backend_service.js"></script>
+    <script>
+        $(function () {
+            $("#header").load("header.html");
+            $("#footer").load("footer.html");
+            
+        });
+
+    </script>
+</head>
+<body class="home">
+    <div id="header"></div>
+    <!--Content-->
+    <script>
+        $(document).ready(function () {
+            $(".mainContent").css("height", window.innerHeight - ($("#header").innerHeight() + 160));
+        });
+    </script>
+    <div class="mainContent">
+        <div class="deliverBarcodeTitle">דד"ג</div>
+        <div class="BarcodeFields">
+            <form id="no_deliver">
+                <input type="text" class="packageinput" name="packageNum" id="packageNum" maxlength="14" placeholder="הקלד מספר דבר דואר"><br>
+                <div class="greyText">* במידה והברקוד אינו קריא ניתן להקליד מספר דבר הדואר</div>
+            </form>
+            <br>
+
+        </div>
+        <a href="#"><div class="BarcodeArea" id="deliver_startScan"></div></a><br>
+        <div class="leftText">מס' מסרונים: <span>0</span></div>
+        <div class="rightText">מס' הודעות: <span>0</span></div>
+        <br>
+        <div class="mainContent">
+            <div class="BarcodeFields">
+                <!--Andrey 29.09.15 start-->
+                <select class="area" name="area" id="unit" required>
+                    <option value="0">בחר יחידה</option>
+                </select>
+                <!--Andrey 29.09.15 end-->           
+                <!--<input type="text" class="noIconinput" id="unit" name="unit" placeholder="בחר יחידה"><br>-->
+                <input type="text" class="noIconinputLeft" name="unit" placeholder="שם משפחה" id="lastName">
+                <input type="text" class="noIconinputRight" name="unit" placeholder="שם פרטי" id="firstName"><br>
+                <input type="tel" class="noIconinput" name="unit" placeholder="מס טלפון" id="phoneNumber"><br>
+                <input type="text" class="noIconinput city" name="unit" placeholder="ישוב" id="city" disabled><br>
+                <!--Olga  Start 24/09/2015-->
+                <!--<input type="text" class="noIconinputMed" name="unit" placeholder="רחוב" id="street">  -->
+                <!--<select id="street" class="noIconinputMed" name="street" style="padding: 10px 3% 10px 4%;margin-top: 10px; width: 49%;"></select>-->
+                <!--Olga  End 24/09/2015-->
+                <!--Andrey 29.09.15 start-->
+                <span id="streetWrapper" style="position: relative">
+                    <input id="street" placeholder="רחוב" type="text" style="padding: 10px 3% 10px 4%;margin-top: 10px; width: 49%;" />
+                </span>
+                <!--Andrey 29.09.15 end-->
+
+                <input type="number" class="noIconinputSmall" name="unit" placeholder="מס' בית" id="houseNumber">
+
+                <br>
+                <div class="redbutton2 exit"><a >יציאה</a></div>
+                <div class="redbutton2 left" id="submit"><a href="#">אישור</a></div>
+            </div>
+        </div>
+        <!--Footer-->
+    </div>
+    <div id="footer"></div>
+</body>
+</html>
+
+<script type="text/javascript">
+    console.log('in dadag');
+    $('#deliver_startScan').
+			click(
+			  function(){
+              var params = 
+                {
+                    text_title: "סריקת ברקוד", // Android only
+                    text_instructions: "כוון את המצלמה על הברקוד.", // Android only
+                    camera: "back", // defaults to "back"
+                    flash: "auto", // defaults to "auto". See Quirks
+                    drawSight: true //defaults to true, create a red sight/line in the center of the scanner view.
+                };
+               cloudSky.zBar.scan(params, onSuccess, onFailure);    
+}
+);
+        function onSuccess(s) {            
+            $('#packageNum').attr('value', s);                              
+            localStorage.setItem("delivery_result", s); 
+        }
+        
+        function onFailure(s) {
+            console.log(s);            
+            if (s!="cancelled") {
+              var errorAlert='סליחה, המצלמה נתקלה בבעיה. ייתכן שיהיה עליך להפעיל מחדש את המכשיר';
+              displayErrorMessage(errorAlert);   
+            }
+        }             	                        
+ /*                                                     
+                 //document.addEventListener("backbutton", onBackKeyDownOnScan, false);
+
+    /*
+* Fix for footer when the keyboard is displayed
+*/
+    $(document).on('focus', 'input, textarea', function () {
+        $(".footer").hide();
+    });
+
+    $(document).on('blur', 'input, textarea', function () {
+        $(".footer").attr("display", "block!important"); $(".footer").show();
+    });
+
+    //Andrey 30.09.15 start
+
+    var dadagSmsCounter = 0;
+    var dadagMesronimCounter = 0;
+    //Andrey 29.09.15 end
+
+    $(document).ready(function () {
+
+        //Andrey 29.09.15 start
+        var deliveryUnits= new getDeliveryUnits(localStorage.getItem("username"), localStorage.getItem("heker"), localStorage.getItem("Region"));
+        var delivery_units = JSON.parse(localStorage.getItem("delivery_units"));
+        console.log(delivery_units);
+        var code = delivery_units.code;
+        var desc = delivery_units.desc;
+        $(code).each(function (index) {
+            $('#unit').append("<option value='" + code[index] + "'>" + desc[index] + "</option>");
+        });
+        //Andrey 29.09.15 end
+
+        //Olga start 24/09/2015
+        $("#city").val(localStorage.cityName);
+        if (sessionStorage.errorstreetCode == 2) {              
+            navigator.notification.alert(
+                                       'אירעה תקלה בהעברת הנתונים. \nנסה מאוחר יותר',  			// message
+                                       null,   			   										 // callback
+                                       'שגיאה',            										 // title
+                                       'אישור'                  									 // buttonName
+                                   );
+        }
+
+        if (sessionStorage.errorstreetCode == 1) { var errMsg = sessionStorage.errorstreetMessage; displayMessage(errMsg); }
+
+        getStreets(localStorage.username, localStorage.city);
+        var streets = sessionStorage.getItem("streets");
+        streets = streets.split(",");
+
+        function doarAutocomplete(elem, elemWrapper) {
+            $(elem).autocomplete({
+                minChars: 3,
+                lookup: streets,
+                onSelect: function (suggestion) {
+                    //setTimeout(function () { $(elem).trigger('click'); $(elem).focus() }, 500);
+                    setTimeout(function () { $('body').trigger('click'); $(elem).focus() }, 200);
+                },
+                appendTo: $(elemWrapper)
+            });
+        }
+
+        if (sessionStorage.errorstreetCode == 0) { doarAutocomplete('#street', '#streetWrapper'); }
+        
+        // Olga End 24/09/2015
+    });
+    $('#deliver_no_startScan').click(function () {
+                 var params = 
+                {
+                    text_title: "סריקת ברקוד", // Android only
+                    text_instructions: "כוון את המצלמה על הברקוד.", // Android only
+                    camera: "back", // defaults to "back"
+                    flash: "auto", // defaults to "auto". See Quirks
+                    drawSight: true //defaults to true, create a red sight/line in the center of the scanner view.
+                };
+               cloudSky.zBar.scan(params, onSuccess_deliver_no, onFailure_deliver_no);    
+}
+);
+        function onSuccess_deliver_no(s) {                       
+            $('#packageNum').attr('value', s);
+            //localStorage.setItem("dadag_result", s); 
+        }
+        
+        function onFailure_deliver_no(s) {
+            console.log(s);            
+            if (s!="cancelled") {
+              var errorAlert='סליחה, המצלמה נתקלה בבעיה. ייתכן שיהיה עליך להפעיל מחדש את המכשיר';
+              displayAlert(errorAlert);   
+            }             
+}      
+
+            //Andrey 29.09.15 end-->
+
+
+        // Olga End 24/09/2015
+
+    $('#submit').click(function () {        
+        event.stopPropagation(event);
+        event.preventDefault(event);
+        var validated = true; var errorMessage;
+        var delivery_result = $('#packageNum').val();
+        var delivery_result_validated=validateBarCode(delivery_result);        
+        var lastName = $("#lastName").val();
+        var firstName = $("#firstName").val();
+        var phoneNumber = $("#phoneNumber").val();
+        var city=localStorage.getItem("city");
+        var streetText = $("#street").val();
+        var houseNumber = $("#houseNumber").val();
+        var unit = $('#unit').val();        
+        if (validated == true && lastName == "") { validated = false; errorMessage = 'יש להזין שם משפחה'; }
+        if (validated == true && firstName == "") { validated = false; errorMessage = 'יש להזין שם פרטי'; }
+        //if (validated == true && phoneNumber == "") { validated = false; errorMessage = 'יש להזין מספר טלפון'; }
+        if (validated == true && city == "") { validated = false; errorMessage = 'יש להזין ישוב'; }
+        if (validated == true && streetText == "") { validated = false; errorMessage = 'יש להזין רחוב'; }
+        if (validated == true && houseNumber == "") { validated = false; errorMessage = 'יש להזין מספר בית'; }
+        if (validated == true && delivery_result_validated.length != 13) { validated = false; errorMessage = 'הברקוד אינו חוקי'; }
+        if (validated == true && delivery_result_validated.length == 0) { validated = false; errorMessage = 'עליך לסרוק ברקוד או להקליד ידנית'; }
+        //if (phoneNumber != '' && $('#unit').val() == 0) { validated = false; errorMessage = 'בחר יחידה'}
+        if (unit == 0) { validated = false; errorMessage = 'עליך לבחור יחידה';}
+        if (validated == false) {
+            displayErrorMessage(errorMessage);
+        } else {
+            var username = localStorage.getItem("username");
+            var heker = localStorage.getItem("heker");
+            var barcodes = delivery_result;
+            var region = localStorage.getItem("Region");
+            var subRegion = localStorage.getItem("subRegions");
+            var actionCode = '24';
+            insertBarcode(username, heker, region, subRegion, actionCode, "0", barcodes, firstName, lastName, city, "0", streetText, houseNumber, "", phoneNumber, 'false', unit, '');            
+            if (sessionStorage.getItem("submit-delivery") == "true") {
+                displayErrorMessage("הדיווח נמסר בהצלחה");
+                $("#phoneNumber").val() == '' ? dadagSmsCounter += 1 : dadagMesronimCounter += 1;
+                $('.rightText span').text(dadagSmsCounter);
+                $('.leftText span').text(dadagMesronimCounter);
+                localStorage.removeItem("submit-delivery");
+                localStorage.removeItem("barcodes");
+                localStorage.removeItem("mesira");
+                localStorage.removeItem("Phone");
+                localStorage.removeItem("barcodeCounter");
+                localStorage.removeItem("submit-delivery");
+                //localStorage.removeItem("dadag_result");
+                localStorage.removeItem("errorMessage");
+                var inputs = $('input');
+                $(inputs).each(function (index) { if (!$(inputs[index]).hasClass("city")) { $(inputs[index]).val(''); } })
+                $('#unit').val(0);
+            } else {
+                displayErrorMessage("הדיווח לא נמסר-אירעה תקלה: " + localStorage.getItem("errorMessage"));
+            }
+
+        }
+        
+    }
+);
+    
+    function validateBarCode(bCode) {
+        if (bCode.length == 14) {
+                if (bCode.substring(11,13) == '80') {
+                    bCode=bCode.substring(0,13);                    
+                } else {validated=false; errorMessage="הברקוד אינו חוקי";}
+            }        
+        return bCode;
+    }
+
+    $('.redbutton2.exit').click(function () {
+        localStorage.setItem('dadagCounter', dadagSmsCounter);
+        if (dadagSmsCounter > 0) { window.location = 'dadagPopup.html'; }
+        else { window.location = 'lobby.html'; }
+
+    })
+
+    function displayErrorMessage(errorMsg) {
+        navigator.notification.alert(
+                              errorMsg,				          //message
+                              null,											//callback
+                              'דואר רשום',							//title
+                              'אישור'										//button name
+                          );
+    }
+
+
+</script>
+<script type="text/javascript" src="cordova.js"></script>
